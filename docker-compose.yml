@@ -1,0 +1,22 @@
+services:
+  lettings:
+    container_name: lettings
+    # Docker stays up in background
+    tty: true
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      # Sharing project folder from Host to Docker
+      - type: bind
+        source: ./
+        target: /home/user/app
+
+    # Share network Stack host to docker
+    # Priviledge mode => Not safe for production
+    #network_mode: host
+
+    build:
+      context: .
+      dockerfile: Dockerfile
