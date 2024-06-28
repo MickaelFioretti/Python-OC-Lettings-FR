@@ -30,6 +30,10 @@ jobs:
               run: |
                   python manage.py migrate
 
+            - name: Run production
+              run: |
+                  export DJANGO_DEBUG=False
+
             - name: Run flake8
               run: |
                   flake8
