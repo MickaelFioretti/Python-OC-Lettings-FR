@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from lettings.models import Address, Letting
+from django.urls import reverse
 
 # --- addresses ---
 
@@ -116,3 +117,8 @@ class LettingTest(TestCase):
         # Test for required fields
         with self.assertRaises(ValidationError):
             Letting.objects.create(address=self.address).full_clean()
+
+    def test_letting_index_view(self):
+        response = self.client.get(reverse("lettings_index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "lettings_index.html")
