@@ -2,16 +2,14 @@ name: CI/CD Pipeline
 
 on:
     push:
-        branches:
-            - master
+        branches: [deploy-prod, deploy-test]
     pull_request:
-        branches:
-            - master
+    workflow_dispatch:
 
 jobs:
-    build:
+    ci-django:
         runs-on: ubuntu-latest
-
+        timeout-minutes: 5
         steps:
             - name: Checkout code
               uses: actions/checkout@v2
@@ -25,21 +23,34 @@ jobs:
               run: |
                   python -m pip install --upgrade pip
                   pip install -r requirements.txt
-
             - name: Run database migrations
               run: |
                   python manage.py migrate
-
-            - name: Run production
-              run: |
-                  export DJANGO_DEBUG=False
-
             - name: Run flake8
               run: |
                   flake8
-
             - name: Run tests
               run: |
                   python manage.py test
                   coverage run --source='.' manage.py test
                   coverage report
+
+
+    deploy-test:
+      runs-on: [self-hosted, test]
+      needs:
+        - ci-django
+      if: github.ref == 'refs/heads/deploy-test'
+      steps:
+        - run: > # run test befor prod
+            export DJANGO_DEBUG=False
+
+
+    deploy-prod:
+      runs-on: [self-hosted, prod]
+      needs:
+        - ci-django
+      if: github.ref == 'refs/heads/deploy-prod'
+      steps:
+        - run: > #run prod
+            export DJANGO_DEBUG=False
