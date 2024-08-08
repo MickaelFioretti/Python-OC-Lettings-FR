@@ -62,17 +62,17 @@ jobs:
       - build-and-push-docker-image
     if: github.ref == 'refs/heads/deploy-test'
     steps:
-      - name: Collect static files
-        run: |
-          python manage.py collectstatic
-
       - name: Pull Docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+          docker pull $DOCKER_USERNAME/django-app:latest
 
       - name: Run Docker container
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker run -d -p 8000:8000 ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+          docker run -d -p 8000:8000 $DOCKER_USERNAME/django-app:latest
 
   deploy-prod:
     runs-on: [self-hosted, prod]
