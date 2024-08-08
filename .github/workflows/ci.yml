@@ -62,6 +62,18 @@ jobs:
       - build-and-push-docker-image
     if: github.ref == 'refs/heads/deploy-test'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      
+      - name: Collect static files
+        run: |
+          python manage.py callectstatic --noinput
+
       - name: Pull Docker image
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -80,14 +92,26 @@ jobs:
       - ci-django
     if: github.ref == 'refs/heads/deploy-prod'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      
       - name: Collect static files
         run: |
-          python manage.py collectstatic
+          python manage.py callectstatic --noinput
 
       - name: Pull Docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+          docker pull $DOCKER_USERNAME/django-app:latest
 
       - name: Run Docker container
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker run -d -p 8000:8000 ${{ secrets.DOCKER_USERNAME }}/django-app:latest
+          docker run -d -p 8000:8000 $DOCKER_USERNAME/django-app:latest
