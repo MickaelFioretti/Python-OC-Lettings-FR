@@ -58,22 +58,9 @@ jobs:
 
   deploy-test:
     runs-on: ubuntu-latest
-    needs:
-      - build-and-push-docker-image
+    needs: build-and-push-docker-image
     if: github.ref == 'refs/heads/deploy-test'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-      
-      - name: Collect static files
-        run: |
-          python manage.py callectstatic --noinput
-
       - name: Pull Docker image
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -84,26 +71,25 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker run -d -p 8000:8000 $DOCKER_USERNAME/django-app:latest
+          docker run -d --name django-app-test -p 8000:8000 $DOCKER_USERNAME/django-app:latest
+
+      - name: Wait for Docker container to be ready
+        run: |
+          sleep 10
+
+      - name: Collect static files
+        run: |
+          docker exec django-app-test python manage.py collectstatic --noinput
+
+      - name: Run database migrations
+        run: |
+          docker exec django-app-test python manage.py migrate
 
   deploy-prod:
     runs-on: ubuntu-latest
-    needs:
-      - ci-django
+    needs: build-and-push-docker-image
     if: github.ref == 'refs/heads/deploy-prod'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-      
-      - name: Collect static files
-        run: |
-          python manage.py callectstatic --noinput
-
       - name: Pull Docker image
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -114,4 +100,4 @@ jobs:
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
-          docker run -d -p 8000:8000 $DOCKER_USERNAME/django-app:latest
+          docker run -d --name django-app-prod -p 8000:8000 $DOCKER_USERNAME/django-app:latest
