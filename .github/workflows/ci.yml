@@ -1,56 +1,52 @@
 name: CI/CD Pipeline
 
 on:
-    push:
-        branches: [deploy-prod, deploy-test]
-    pull_request:
-    workflow_dispatch:
+  push:
+    branches: [deploy-prod, deploy-test]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-    ci-django:
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v2
+  ci-django:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-            - name: Set up Python
-              uses: actions/setup-python@v2
-              with:
-                  python-version: "3.9"
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.txt
-            - name: Run database migrations
-              run: |
-                  python manage.py migrate
-            - name: Run flake8
-              run: |
-                  flake8
-            - name: Run tests
-              run: |
-                  python manage.py test
-                  coverage run --source='.' manage.py test
-                  coverage report
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run database migrations
+        run: |
+          python manage.py migrate
+      - name: Run flake8
+        run: |
+          flake8
+      - name: Run tests
+        run: |
+          python manage.py test
+          coverage run --source='.' manage.py test
+          coverage report
 
+  deploy-test:
+    runs-on: [self-hosted, test]
+    needs:
+      - ci-django
+    if: github.ref == 'refs/heads/deploy-test'
+    steps:
+      - run: > # run test befor prod
 
-    deploy-test:
-      runs-on: [self-hosted, test]
-      needs:
-        - ci-django
-      if: github.ref == 'refs/heads/deploy-test'
-      steps:
-        - run: > # run test befor prod
-            export DJANGO_DEBUG=False
-
-
-    deploy-prod:
-      runs-on: [self-hosted, prod]
-      needs:
-        - ci-django
-      if: github.ref == 'refs/heads/deploy-prod'
-      steps:
-        - run: > #run prod
-            export DJANGO_DEBUG=False
+  deploy-prod:
+    runs-on: [self-hosted, prod]
+    needs:
+      - ci-django
+    if: github.ref == 'refs/heads/deploy-prod'
+    steps:
+      - run: > #run prod
