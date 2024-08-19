@@ -1,5 +1,5 @@
 import os
-
+import sentry_sdk
 from pathlib import Path
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -44,6 +44,17 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "oc_lettings_site.urls"
+
+sentry_sdk.init(
+    dsn="https://d7043e509704c5b980ee8870f6389214@o4507741033070592.ingest.de.sentry.io/4507741034774608",  # noqa E501
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    # Set profiles_sample_rate to 1.0 to profile 100%
+    # of sampled transactions.
+    # We recommend adjusting this value in production.
+    profiles_sample_rate=1.0,
+)
 
 TEMPLATES = [
     {
