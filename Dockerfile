@@ -18,7 +18,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=oc_lettings_site.settings
 
 # Exposer le port 8000
-EXPOSE 8000
+EXPOSE $PORT
 
 # Collecter les fichiers statiques
 RUN python manage.py collectstatic --noinput
